@@ -1,4 +1,6 @@
-from flask import Flask, request, make_response
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import shutil
 
 
 class Checker:
@@ -48,39 +50,18 @@ class Checker:
         return check_01
 
 
-class Server:
-    download_dir = "."
-    max_size_bytes = 100 * 1024 * 1024
-    checker = Checker()
+def main() -> None:
+    app = FastAPI()
 
-    def __init__(self, name_: str):
-        self.app = Flask(name_)
-        self.__upload_handler = self.__init_route_to_upload()
-
-    def config_server(self) -> None:
-        self.app.config["UPLOAD_FOLDER"] = self.download_dir
-        self.app.config["MAX_CONTENT_LENGTH"] = self.max_size_bytes
-
-    def __init_route_to_upload(self) -> ():
-        @self.app.route("/send", methods=["GET", "POST"])
-        def get_sent_file():
-            f = request.files["file"]
-            filename = f.filename
-            if self.checker.complex_check_file(filename):
-                f.save(filename)
-                resp = make_response({"message": f"Saved as {filename} successfully."}, 200)
-                resp.headers["Content-Type"] = "application/json"
-                return resp
-            else:
-                resp = make_response({"message": "File is forbidden."}, 403)
-                resp.headers["Content-Type"] = "application/json"
-                return resp
-
-        return get_sent_file
+    @app.post("/upload/")
+    async def upload_file(file: UploadFile = File(...)):
+        try:
+            with open(f"destination\\{file.filename}", "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            return JSONResponse(content={"message": "File uploaded successfully"})
+        except Exception as e:
+            return JSONResponse(content={"message": f"An error occurred: {e}"}, status_code=500)
 
 
 if __name__ == '__main__':
-    srv = Server(__name__)
-    app = srv.app
-
-    app.run(debug=True, port=8889)
+    main()
