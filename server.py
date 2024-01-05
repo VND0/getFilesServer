@@ -14,7 +14,7 @@ class Checker:
     """
 
     __allowed_extensions = ("txt", "docx", "doc", "ppt", "pptx", "rtf", "xls", "xslx",
-                          "pdf", "jpg", "jpeg", "png", "bmp", "heic")
+                            "pdf", "jpg", "jpeg", "png", "bmp", "heic")
     __forbidden_patterns = ("../", "/..", "\b", "\\b")
 
     def __check_file_by_filename(self, filename: str) -> bool:
